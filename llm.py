@@ -75,6 +75,9 @@ def chat(
         "temperature": temperature,
         "max_tokens": max_tokens,
     }
+    # 关闭推理：避免部分免费模型把小 max_tokens 预算吃光导致 content 落空（与 Java 侧一致）
+    if config.DISABLE_REASONING:
+        payload["reasoning"] = {"enabled": False}
     data = json.dumps(payload).encode("utf-8")
 
     last_err = None

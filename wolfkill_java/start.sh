@@ -15,7 +15,7 @@
 # 配置大模型（无需改源码/重编译），用环境变量注入：
 #   WEREWOLF_API_KEY    OpenRouter Key（真实对局必填）
 #   WEREWOLF_BASE_URL   可选，默认 OpenRouter
-#   WEREWOLF_MODEL      可选，默认 tencent/hy3:free
+#   WEREWOLF_MODEL      可选，默认 nvidia/nemotron-3-super-120b-a12b:free
 #   WEREWOLF_MOCK       设为 true 强制离线
 # 端口优先级：--port 命令行 > 环境变量 PORT（云平台常注入）> 默认 3000
 cd "$(dirname "$0")"

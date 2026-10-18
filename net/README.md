@@ -14,7 +14,7 @@
 ```bash
 cd /Users/hanks/Desktop/wolfKill
 
-# 真实对局（默认免费模型 tencent/hy3:free，不消耗额度）
+# 真实对局（默认免费模型 nvidia/nemotron-3-super-120b-a12b:free，不消耗额度）
 python3 net/server.py
 
 # 常用参数

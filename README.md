@@ -34,12 +34,15 @@ export WEREWOLF_API_KEY="sk-or-你的真实key"
 
 > 仅运行 `--mock` 离线模式时无需配置。
 
-默认模型：
-- **Java 服务器模式**：`nvidia/nemotron-3-super-120b-a12b:free`（免费、无需额度）
-- **Python 模式**：默认 `tencent/hy3:free` 已被 OpenRouter 下架，请改用环境变量指定可用模型：
-  ```bash
-  export WEREWOLF_MODEL="nvidia/nemotron-3-super-120b-a12b:free"
-  ```
+默认模型（两种 Python 模式与 Java 服务器模式一致，均为免费、无需额度的强模型）：
+- `nvidia/nemotron-3-super-120b-a12b:free`（NVIDIA 路由，不受地区限制，中文可用）
+
+如需切换模型，设置环境变量（三模式通用）：
+```bash
+export WEREWOLF_MODEL="你想用的模型id"
+# 若目标模型为非推理模型，可关闭推理参数：
+export WEREWOLF_DISABLE_REASONING=0
+```
 
 ### 2. 运行环境
 
@@ -138,7 +141,7 @@ wolfKill/
 A：已修复为幂等加入（基于浏览器持久化 `clientId`），刷新重连会找回原座位，不会重复创建。
 
 **Q：真实对局报 OpenRouter 请求失败？**
-A：检查 `WEREWOLF_API_KEY` 是否正确、模型名是否仍可用（注意 `tencent/hy3:free` 已下架，请用环境变量 `WEREWOLF_MODEL` 切换）。
+A：检查 `WEREWOLF_API_KEY` 是否正确、模型名是否仍可用（默认已改为 `nvidia/nemotron-3-super-120b-a12b:free`；若你曾自行指定过已下架的 `tencent/hy3:free`，请用环境变量 `WEREWOLF_MODEL` 切换为可用模型）。
 
 **Q：AI 思考时页面无响应？**
 A：属正常等待；若整局卡死，多为真人玩家挂机，系统会在数秒后自动跳过该玩家。

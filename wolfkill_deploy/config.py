@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 狼人杀（纯文字）配置文件
-- API Key 默认取自环境变量 WEREWOLF_API_KEY，未设置时使用下方硬编码的 Key
+- API Key 从环境变量 WEREWOLF_API_KEY 读取（运行前 export，切勿在源码中硬编码）
 - 默认 1 名真人玩家 + 5 名 AI 玩家（共 6 人）
 - 角色配比见 ROLES_CONFIG，键为角色名，值为人数，所有人数之和即为总人数
 """
@@ -12,15 +12,20 @@ import os
 API_KEY = os.getenv("WEREWOLF_API_KEY")  # 仅从环境变量读取，禁止硬编码密钥提交到仓库
 BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-# 默认模型（可在运行时用 --model 覆盖）。已实测可在本 Key 下【免额度】调用：
-#   "tencent/hy3:free"              （腾讯混元，中文好，默认，免额度）
+# 默认模型（可在运行时用 --model 覆盖，或用环境变量 WEREWOLF_MODEL 指定）。
+# 注意：原 "tencent/hy3:free" 已被 OpenRouter 下架（404），现默认使用免费且无需额度的强模型：
+#   "nvidia/nemotron-3-super-120b-a12b:free"   （NVIDIA 路由，不受地区限制；中文可用，免费）
 # 其他免费备选（偶尔限流 429，可换用）：
 #   "meta-llama/llama-3.3-70b-instruct:free"
 #   "qwen/qwen3-next-80b-a3b-instruct:free"
-#   "nousresearch/hermes-3-llama-3.1-405b:free"
 # 付费模型（需额度）：
 #   "deepseek/deepseek-chat" / "openai/gpt-4o-mini"
-MODEL = os.getenv("WEREWOLF_MODEL", "tencent/hy3:free")
+MODEL = os.getenv("WEREWOLF_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
+
+# 关闭推理（reasoning）：部分免费模型默认走思维链，会把小 max_tokens（如"投几号"）的预算吃光，
+# 导致 content 落空。置 True 时向请求体追加 {"reasoning":{"enabled":false}}，让答案直接落到 content。
+# 若换成非推理模型，可设环境变量 WEREWOLF_DISABLE_REASONING=0 关闭。
+DISABLE_REASONING = os.getenv("WEREWOLF_DISABLE_REASONING", "1") in ("1", "true", "True")
 
 # 免费模型限流较严：每次调用后短暂间隔，降低 429 概率
 CALL_DELAY = float(os.getenv("WEREWOLF_CALL_DELAY", "0.5"))

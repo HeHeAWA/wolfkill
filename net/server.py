@@ -11,7 +11,7 @@
   局域网直接用本机 IP；外网可用 cloudflared / ngrok 等内网穿透（见 net/README.md）。
 
 用法：
-    python3 net/server.py                 # 真实对局（默认免费模型 tencent/hy3:free，端口 3000）
+    python3 net/server.py                 # 真实对局（默认免费模型 nvidia/nemotron-3-super-120b-a12b:free，端口 3000）
     python3 net/server.py --port 3000     # 指定端口
     python3 net/server.py --mock          # 离线：AI 用确定性逻辑，不联网、不消耗额度
     python3 net/server.py --total 8        # 设定一桌总人数（真人+AI），默认 8

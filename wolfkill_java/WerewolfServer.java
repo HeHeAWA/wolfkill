@@ -1,7 +1,7 @@
 // 狼人杀 · 多人联机服务端（Java 11+，纯 JDK，零第三方依赖）
 // 浏览器进入：电脑开一个端口，其他人用浏览器打开即可加入。
 // 用法：
-//   java WerewolfServer                  # 真实对局（默认免费模型 tencent/hy3:free，端口 3000）
+//   java WerewolfServer                  # 真实对局（默认免费模型 nvidia/nemotron-3-super-120b-a12b:free，端口 3000）
 //   java WerewolfServer --port 3000     # 指定端口
 //   java WerewolfServer --mock          # 离线：AI 用确定性逻辑，不联网、不消耗额度
 //   java WerewolfServer --total 8       # 一桌总人数（真人+AI），默认 8
