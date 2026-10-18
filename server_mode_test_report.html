@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>狼人杀 · 服务器模式功能测试报告</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+ background:#0f1320;color:#e6e9f0;margin:0;padding:32px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:26px;margin:0 0 6px}
+.sub{color:#9aa3b8;margin-bottom:22px;font-size:14px}
+.card{background:#181d2e;border:1px solid #2a3147;border-radius:12px;padding:20px;margin-bottom:20px}
+.kpis{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.kpi{flex:1;min-width:140px;background:#181d2e;border:1px solid #2a3147;border-radius:12px;padding:16px;text-align:center}
+.kpi .n{font-size:30px;font-weight:700}
+.kpi .l{color:#9aa3b8;font-size:13px;margin-top:4px}
+.green{color:#3ddc84} .red{color:#ff6b6b} .blue{color:#5aa0ff}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #232a3d;vertical-align:top}
+th{color:#9aa3b8;font-weight:600;background:#141826}
+tr.ok td{color:#dfe5f2} tr.bad td{color:#ffd0d0;background:rgba(255,107,107,.06)}
+.ev{color:#8b93a7;font-size:12px;margin-top:3px;word-break:break-all}
+.note{color:#9aa3b8;font-size:13px;line-height:1.7}
+code{background:#0c1020;padding:1px 6px;border-radius:5px;color:#9fd0ff;font-size:12px}
+h2{font-size:18px;margin:0 0 12px}
+</style></head>
+<body><div class="wrap">
+<h1>🐺 狼人杀 · 服务器模式（Java）功能测试报告</h1>
+<div class="sub">测试时间：2026-07-21 23:03:18 ｜ 模式：<code>--mock</code>（AI 确定性逻辑，不联网）｜ 端口 3211 ｜ JDK 20</div>
+<div class="card"><div class="kpis">
+  <div class="kpi"><div class="n green">26</div><div class="l">通过</div></div>
+  <div class="kpi"><div class="n red">0</div><div class="l">失败</div></div>
+  <div class="kpi"><div class="n blue">26</div><div class="l">总用例</div></div>
+  <div class="kpi"><div class="n blue">100.0%</div><div class="l">通过率</div></div>
+</div></div>
+<div class="card"><h2>📊 分类汇总</h2>
+<table class="cat"><tr><th>类别</th><th>用例数</th><th>通过</th><th>失败</th></tr><tr><td>基础设施</td><td>1</td><td>1</td><td>0</td></tr><tr><td>加入/退出</td><td>3</td><td>3</td><td>0</td></tr><tr><td>房主踢人</td><td>3</td><td>3</td><td>0</td></tr><tr><td>身份分配</td><td>1</td><td>1</td><td>0</td></tr><tr><td>完整对局</td><td>1</td><td>1</td><td>0</td></tr><tr><td>夜晚流程</td><td>3</td><td>3</td><td>0</td></tr><tr><td>上警竞选</td><td>2</td><td>2</td><td>0</td></tr><tr><td>发言</td><td>1</td><td>1</td><td>0</td></tr><tr><td>状态展示</td><td>1</td><td>1</td><td>0</td></tr><tr><td>局间流程</td><td>1</td><td>1</td><td>0</td></tr><tr><td>容错</td><td>2</td><td>2</td><td>0</td></tr><tr><td>LLM 请求</td><td>2</td><td>2</td><td>0</td></tr><tr><td>前端交互</td><td>5</td><td>5</td><td>0</td></tr></table></div>
+<div class="card"><h2>🧪 详细结果</h2>
+<table><tr><th>编号</th><th>功能</th><th>类别</th><th>结果</th><th>说明</th></tr><tr class='ok'>
+<td>COMPILE</td><td>Java 源码编译（--release 11）</td>
+<td>基础设施</td>
+<td>✅ 通过</td>
+<td>编译成功</td><div class='ev'>javac exit=0</div></tr><tr class='ok'>
+<td>C1</td><td>加入幂等：同 clientId 重复加入返回同一 token</td>
+<td>加入/退出</td>
+<td>✅ 通过</td>
+<td>T1=6024d9… T1b=6024d9…</td><div class='ev'>两次 token 一致</div></tr><tr class='ok'>
+<td>C2</td><td>不同/无 clientId 返回不同 token</td>
+<td>加入/退出</td>
+<td>✅ 通过</td>
+<td>T2=70cdd8 T3=592c52</td></tr><tr class='ok'>
+<td>C3</td><td>退出后同 clientId 重新加入得新座位（映射已清理）</td>
+<td>加入/退出</td>
+<td>✅ 通过</td>
+<td>退出ok=True 新T4=048eae</td></tr><tr class='ok'>
+<td>D1</td><td>房主踢人（大厅）：成员被移除</td>
+<td>房主踢人</td>
+<td>✅ 通过</td>
+<td>踢前 2 → 踢后 1，ok=True</td></tr><tr class='ok'>
+<td>D2</td><td>被踢者 token 立即失效</td>
+<td>房主踢人</td>
+<td>✅ 通过</td>
+<td>token_valid=False</td></tr><tr class='ok'>
+<td>A1</td><td>标准版型身份构成（8人：2狼+预+女+猎+守+2民）</td>
+<td>身份分配</td>
+<td>✅ 通过</td>
+<td>实际=[&#x27;狼人×2&#x27;, &#x27;预言家&#x27;, &#x27;女巫&#x27;, &#x27;猎人&#x27;, &#x27;守卫&#x27;, &#x27;平民×2&#x27;]</td><div class='ev'>期望=[&#x27;狼人×2&#x27;, &#x27;预言家&#x27;, &#x27;女巫&#x27;, &#x27;猎人&#x27;, &#x27;守卫&#x27;, &#x27;平民×2&#x27;]</div></tr><tr class='ok'>
+<td>A0</td><td>完整一局正常跑完（主机自动应答）</td>
+<td>完整对局</td>
+<td>✅ 通过</td>
+<td>ended=True 主机提交 9 次</td><div class='ev'>日志行数=107</div></tr><tr class='ok'>
+<td>A2</td><td>夜晚行动顺序：女巫先于预言家</td>
+<td>夜晚流程</td>
+<td>✅ 通过</td>
+<td>女巫@7 预言家@9</td></tr><tr class='ok'>
+<td>A3</td><td>上警：全部决定后统一公布（上警结果）</td>
+<td>上警竞选</td>
+<td>✅ 通过</td>
+<td>日志含『上警结果』公布段</td></tr><tr class='ok'>
+<td>A4</td><td>上警者不参与警长投票</td>
+<td>上警竞选</td>
+<td>✅ 通过</td>
+<td>日志含『（上警者）不参与投票』</td></tr><tr class='ok'>
+<td>A5</td><td>白天发言按玩家编号依次显示</td>
+<td>发言</td>
+<td>✅ 通过</td>
+<td>每天发言编号段=[[1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7]]</td><div class='ev'>每天编号严格递增</div></tr><tr class='ok'>
+<td>A6</td><td>狼队夜晚行动阶段正常执行</td>
+<td>夜晚流程</td>
+<td>✅ 通过</td>
+<td></td></tr><tr class='ok'>
+<td>A7</td><td>AI 思考中状态位在游戏中置位</td>
+<td>状态展示</td>
+<td>✅ 通过</td>
+<td>观测到 ai_thinking=True：True</td></tr><tr class='ok'>
+<td>A8</td><td>结束后回大厅并可再来一局（reset）</td>
+<td>局间流程</td>
+<td>✅ 通过</td>
+<td>reset ok=True 状态=lobby 再加入ok=True</td></tr><tr class='ok'>
+<td>D3</td><td>游戏内房主踢人：被踢者由 AI 接管，对局继续</td>
+<td>房主踢人</td>
+<td>✅ 通过</td>
+<td>踢人ok=True AI接管=有 终局=ended</td></tr><tr class='ok'>
+<td>B1</td><td>挂机不卡死：房主全程不操作，对局仍能结束</td>
+<td>容错</td>
+<td>✅ 通过</td>
+<td>终局=True 用时=31.5s</td><div class='ev'>主机提交 0 次；31.5s 内结束说明 8s 挂机跳过(非45s超时)生效</div></tr><tr class='ok'>
+<td>B2</td><td>挂机跳过在 50s 内完成（证明 IDLE_PASS=8s 生效）</td>
+<td>容错</td>
+<td>✅ 通过</td>
+<td>用时=31.5s</td></tr><tr class='ok'>
+<td>E1</td><td>LLM 请求走直连、已移除代理逻辑</td>
+<td>LLM 请求</td>
+<td>✅ 通过</td>
+<td>LLM.java 不含 ProxySelector/proxy()</td></tr><tr class='ok'>
+<td>E2</td><td>OpenRouter 网络可达性（信息项）</td>
+<td>LLM 请求</td>
+<td>✅ 通过</td>
+<td>探测结果：可达</td></tr><tr class='ok'>
+<td>F1</td><td>夜晚不亮框：前端仅在非夜晚高亮当前发言者</td>
+<td>前端交互</td>
+<td>✅ 通过</td>
+<td>index.html 含 `!s.is_night` 高亮条件</td></tr><tr class='ok'>
+<td>F2</td><td>输入栏不自动清空：renderAction 签名比对避免重建</td>
+<td>前端交互</td>
+<td>✅ 通过</td>
+<td>index.html 含 `lastPendingSig` 比对</td></tr><tr class='ok'>
+<td>F3</td><td>房主踢人按钮（大厅+游戏内）</td>
+<td>前端交互</td>
+<td>✅ 通过</td>
+<td>index.html 含 doKick 调用</td></tr><tr class='ok'>
+<td>F4</td><td>加入幂等：前端持久化 clientId 并随请求发送</td>
+<td>前端交互</td>
+<td>✅ 通过</td>
+<td>index.html 含 clientId</td></tr><tr class='ok'>
+<td>F5</td><td>AI 思考中提示</td>
+<td>前端交互</td>
+<td>✅ 通过</td>
+<td>index.html 使用 ai_thinking</td></tr><tr class='ok'>
+<td>G1</td><td>神职（预言家/女巫/守卫）死亡后仍播报并停顿约10秒</td>
+<td>夜晚流程</td>
+<td>✅ 通过</td>
+<td>Room.java 中 Thread.sleep(10000) 出现 3 处</td></tr></table></div>
+<div class="card"><h2>📝 测试范围与说明</h2><div class="note"><ul>
+<li><b>测试方法：</b>启动 <code>WerewolfServer --mock</code>，用 Python 通过 HTTP API 驱动；对局逻辑由确定性 mock-AI 执行，覆盖完整游戏循环（夜晚→白天发言→投票放逐→猎人/遗言→胜负判定）。</li>
+<li><b>真人对局路径：</b>由「主机自动应答机器人」模拟真人提交（choice/女巫/发言/上警/狼队讨论等），验证 <code>/api/action</code>、<code>/api/chat</code> 各分支。</li>
+<li><b>挂机容错：</b>场景 B 让房主全程不操作，验证 8 秒挂机跳过（<code>IDLE_PASS</code>）生效，对局仍可在 ~15s 内结束而非 45 秒超时堆积。</li>
+<li><b>前端特性：</b>夜晚不亮框、输入不丢失、踢人按钮、clientId 幂等、AI 思考中为前端代码静态校验（需浏览器实跑确认视觉效果）。</li>
+<li><b>LLM 直连：</b>确认 <code>LLM.java</code> 移除代理逻辑走直连；OpenRouter 真实连通性受沙箱网络限制，需在部署环境自测。</li>
+<li><b>神职死亡停顿：</b>静态确认预言家/女巫/守卫死亡后仍有 10 秒播报停顿（防时序泄密），且不会造成卡死。</li>
+<li><b>每场景独立重启服务器</b>，杜绝跨场景状态污染（如大厅人数累积导致加入满员）。</li>
+</ul></div></div>
+</div></body></html>

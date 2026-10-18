@@ -1,0 +1,20 @@
+# ===== 密钥 / 运行时机密（切勿提交）=====
+wolfkill_secret.log
+.env
+*.env
+*.local
+
+# ===== 编译产物 =====
+*.class
+__pycache__/
+*.pyc
+
+# ===== 打包 / 部署产物（非源码，按需重新生成）=====
+wolfkill_java.zip
+
+# ===== 本地 / agent 私有目录 =====
+.workbuddy/
+
+# ===== 系统文件 =====
+.DS_Store
+Thumbs.db

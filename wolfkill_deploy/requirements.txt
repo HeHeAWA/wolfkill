@@ -1,0 +1,6 @@
+# 本项目仅使用 Python 标准库（http.server / threading / urllib / ssl / json 等），
+# 无需安装任何第三方依赖。直接运行即可：
+#     python3 server.py --port 3000
+#
+# 如需用 pip 校验环境（可选）：
+#     python3 -m pip install -r requirements.txt   # 本文件为空，不会安装任何包

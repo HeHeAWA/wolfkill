@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐺 狼人杀 · 联机</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#182031; --panel2:#1f2942; --line:#2b3550;
+    --txt:#e8edf7; --dim:#95a1bd; --accent:#e0564f; --good:#4caf7d;
+    --gold:#e5b769; --wolf:#e0564f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.6}
+  .wrap{max-width:920px;margin:0 auto;padding:16px}
+  h1{font-size:22px;margin:6px 0 14px;text-align:center}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin-bottom:14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input,button{font-size:15px;font-family:inherit}
+  input[type=text]{flex:1;min-width:160px;padding:11px 13px;border-radius:10px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--txt)}
+  button{padding:11px 16px;border:none;border-radius:10px;cursor:pointer;
+    background:var(--accent);color:#fff;font-weight:600;transition:.15s}
+  button:hover{filter:brightness(1.1)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  button.good{background:var(--good)}
+  .muted{color:var(--dim);font-size:13px}
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;background:var(--panel2);
+    border:1px solid var(--line);font-size:13px;margin:3px 4px 3px 0}
+  .pill.dead{opacity:.4;text-decoration:line-through}
+  .pill.you{border-color:var(--gold);color:var(--gold)}
+  .pill.act{border-color:var(--accent);box-shadow:0 0 0 2px rgba(224,86,79,.3)}
+  #log{height:46vh;overflow-y:auto;background:#0c111c;border:1px solid var(--line);
+    border-radius:12px;padding:12px;font-size:14px;white-space:pre-wrap}
+  .le{padding:2px 0;border-bottom:1px solid #141b2b}
+  .roleCard{padding:12px 14px;border-radius:12px;font-size:15px}
+  .roleCard.wolf{background:rgba(224,86,79,.14);border:1px solid var(--wolf)}
+  .roleCard.good{background:rgba(76,175,125,.12);border:1px solid var(--good)}
+  .action{background:linear-gradient(160deg,#243154,#1b2440);
+    border:1px solid var(--gold);border-radius:14px;padding:16px;margin-bottom:14px}
+  .action h3{margin:0 0 6px;color:var(--gold)}
+  .opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .opts button{background:var(--panel2);border:1px solid var(--line);color:var(--txt)}
+  .opts button.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+  .sec{font-size:13px;color:var(--gold);background:rgba(229,183,105,.08);
+    border:1px dashed rgba(229,183,105,.4);border-radius:10px;padding:8px 12px;margin-top:8px}
+  .priv{font-size:13px;color:#7fd0ff;background:rgba(60,150,220,.08);
+    border:1px dashed rgba(60,150,220,.4);border-radius:10px;padding:8px 12px;margin-top:8px}
+  .hint{color:var(--dim);font-size:13px;margin-top:6px}
+  .banner{text-align:center;font-size:20px;font-weight:700;padding:14px;border-radius:12px;margin-bottom:12px}
+  .banner.wolf{background:rgba(224,86,79,.18);color:#ff9a94}
+  .banner.good{background:rgba(76,175,125,.18);color:#8fe6bb}
+  .waiting{display:flex;align-items:center;gap:8px;color:var(--dim)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:blink 1s infinite}
+  @keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🐺 狼人杀 · 联机版</h1>
+
+  <!-- 加入 -->
+  <div id="joinView" class="card">
+    <div class="row">
+      <input id="nameInput" type="text" placeholder="输入你的昵称" maxlength="12">
+      <button onclick="doJoin()">进入房间</button>
+    </div>
+    <div class="hint">和朋友玩：房主先启动服务端，其他人用浏览器打开同一地址即可加入。真人不够会由 AI 补位。</div>
+  </div>
+
+  <!-- 大厅 -->
+  <div id="lobbyView" class="card" style="display:none">
+    <h3 style="margin-top:0">🪑 房间大厅</h3>
+    <div id="lobbyPlayers"></div>
+    <div class="hint" id="lobbyInfo"></div>
+    <div class="hint" id="lobbyRoles" style="margin-top:6px"></div>
+    <div id="hostBox" style="display:none;margin-top:12px">
+      <div class="row">
+        <span class="muted">一桌总人数（真人+AI）：</span>
+        <button class="ghost" onclick="changeTotal(-1)">−</button>
+        <span id="totalVal" style="min-width:28px;text-align:center;font-weight:700"></span>
+        <button class="ghost" onclick="changeTotal(1)">＋</button>
+        <button class="good" onclick="doStart()">🚀 开始游戏</button>
+      </div>
+      <div class="hint">仅房主可调整人数和开始。范围 4–12 人。</div>
+    </div>
+    <div id="guestHint" class="hint" style="display:none">等待房主开始游戏…</div>
+    <div class="row" style="margin-top:12px">
+      <button class="ghost" onclick="doExit()">🚪 离开房间</button>
+    </div>
+  </div>
+
+  <!-- 游戏 -->
+  <div id="gameView" style="display:none">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span class="muted">🐺 狼人杀 · 联机</span>
+      <button class="ghost" onclick="doExit()">🚪 退出游戏</button>
+    </div>
+    <div id="bannerBox"></div>
+    <div id="aiThinking" style="display:none;margin-bottom:10px">
+      <div class="waiting"><div class="dot"></div>🤖 AI 思考中…（真人玩家无需操作，稍候）</div>
+    </div>
+    <div class="card" id="roleCompCard" style="display:none">
+      <div class="muted" style="margin-bottom:6px">🎭 本局身份构成（只公布身份种类与数量，不暴露谁是什么身份）</div>
+      <div id="roleComp"></div>
+    </div>
+    <div class="card" id="youCard"></div>
+    <div id="wolfChatBox" style="display:none">
+      <div class="muted" style="margin-bottom:6px">🐺 狼队密谋室（仅狼人可见，与外面的发言/投票完全隔离）</div>
+      <div id="wolfChatMsgs" style="height:28vh;overflow-y:auto;background:#0c111c;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;white-space:pre-wrap"></div>
+      <div class="row" style="margin-top:8px">
+        <input id="wolfChatInput" type="text" placeholder="和狼队友密谋…（回车发送）" onkeydown="if(event.key==='Enter')sendWolfChat()">
+        <button onclick="sendWolfChat()">发送</button>
+        <button class="good" onclick="endWolfChat()">结束讨论，决定今晚刀谁</button>
+      </div>
+      <div class="hint">讨论结束前可自由发言；点「结束讨论」后进入最终刀人投票。任一只狼点结束即收尾。</div>
+    </div>
+    <div id="actionBox"></div>
+    <div class="card">
+      <div class="muted" id="phaseText"></div>
+      <div style="margin:8px 0">
+        <span class="muted">场上玩家：</span><div id="players" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="muted" style="margin-bottom:6px">📜 公共记录</div>
+      <div id="log"></div>
+    </div>
+    <div id="extraBox"></div>
+  </div>
+</div>
+
+<script>
+let TOKEN = localStorage.getItem("wk_token") || "";
+let lastV = -1;
+let curTotal = 8;
+let selVal = null;      // 选项类行动的当前选择
+let witchState = {save:false, poison:0};
+
+const $ = id => document.getElementById(id);
+
+// 方案A：关闭/离开页面时自动通知服务器退出（等价于点「离开房间」），
+// 避免房主直接关页后房间无人能开始、卡死。用 sendBeacon 保证在页面卸载时仍能发出。
+// 注意：刷新页面也会触发此逻辑（等同退出，回来需重新进入房间）。
+function _autoExit(){
+  if(!TOKEN) return;
+  try{
+    const blob = new Blob([JSON.stringify({token: TOKEN})], {type:"application/json"});
+    if(navigator.sendBeacon) navigator.sendBeacon("/api/exit", blob);
+  }catch(e){}
+}
+window.addEventListener("pagehide", _autoExit);
+window.addEventListener("beforeunload", _autoExit);
+
+async function api(path, body){
+  const opt = {method: body?"POST":"GET", headers:{"Content-Type":"application/json"}};
+  if(body) opt.body = JSON.stringify(body);
+  const r = await fetch(path, opt);
+  return r.json();
+}
+
+async function doJoin(){
+  const name = $("nameInput").value.trim();
+  if(!name){ alert("请输入昵称"); return; }
+  // 防卡顿重复提交：点击后立即禁用按钮并提示「正在加入」，避免网络延迟下连点产生两个身份
+  const btn = document.querySelector("#joinView button");
+  if(btn){ btn.disabled = true; btn.textContent = "正在加入…"; }
+  if(TOKEN){ return; }   // 已拿到身份则忽略
+  try {
+    const r = await api("/api/join", {name});
+    if(!r.ok){ alert(r.error||"加入失败"); return; }
+    TOKEN = r.token;
+    localStorage.setItem("wk_token", TOKEN);
+    poll();
+  } finally {
+    // 加入失败时恢复按钮，可重试；成功则 joinView 会被隐藏，无需恢复
+    if(!TOKEN && btn){ btn.disabled = false; btn.textContent = "进入房间"; }
+  }
+}
+
+async function changeTotal(d){
+  curTotal = Math.max(4, Math.min(12, curTotal + d));
+  await api("/api/config", {token:TOKEN, total:curTotal});
+}
+
+async function doStart(){
+  const r = await api("/api/start", {token:TOKEN});
+  if(!r.ok) alert(r.error||"无法开始");
+}
+
+async function sendAction(value){
+  await api("/api/action", {token:TOKEN, value});
+  selVal = null;
+  witchState = {save:false, poison:0};
+  $("actionBox").innerHTML = '<div class="card"><div class="waiting"><div class="dot"></div>已提交，等待其他玩家…</div></div>';
+}
+
+function roleDesc(role){
+  const m={
+    "狼人":"每晚与狼队友商量后击杀一人，白天伪装成好人。",
+    "预言家":"每晚查验一人真假，白天带领好人找狼。",
+    "女巫":"有解药和毒药各一瓶，救人或毒人各一次。",
+    "猎人":"被杀或被放逐时可开枪带走一人（被毒杀除外）。",
+    "守卫":"每晚守护一人免遭狼刀（不能守自己/连守）。",
+    "平民":"没有技能，靠发言和投票找出狼人。"
+  };
+  return m[role]||"";
+  }
+
+  function roleCompHtml(comp){
+    return (comp||[]).map(r=>`<span class="pill">${esc(r)}</span>`).join("");
+  }
+
+function render(s){
+  // 视图切换
+  $("joinView").style.display = (!TOKEN) ? "" : "none";
+  $("lobbyView").style.display = (TOKEN && s.state==="lobby") ? "" : "none";
+  $("gameView").style.display  = (TOKEN && s.state!=="lobby") ? "" : "none";
+
+  if(s.state==="lobby"){
+    const L = s.lobby||{};
+    curTotal = L.total || curTotal;
+    $("lobbyPlayers").innerHTML = (L.players||[]).map(n=>
+      `<span class="pill${n===L.you_name?' you':''}">${esc(n)}</span>`).join("") || '<span class="muted">暂无玩家</span>';
+    $("lobbyInfo").textContent = `真人 ${L.n_humans} 人 + AI ${L.n_ai} 人 = 共 ${L.total} 人`;
+    $("lobbyRoles").innerHTML = "🎭 本局身份：" + roleCompHtml(s.role_composition);
+    $("hostBox").style.display   = L.is_host ? "" : "none";
+    $("guestHint").style.display = L.is_host ? "none" : "";
+    $("totalVal").textContent = L.total;
+    return;
+  }
+
+  // 游戏中 / 结束
+  $("phaseText").textContent = "阶段：" + (s.phase||"");
+  // AI 思考中提示：进行中且无真人被点名时显示，避免把较慢的 AI 回合误判为卡死
+  const inWolfChat = s.you && s.you.is_wolf && s.wolf_discussion_open;
+  $("aiThinking").style.display = (s.state==="playing" && s.ai_thinking && !inWolfChat) ? "" : "none";
+  // 身份卡
+  if(s.you){
+    const y=s.you, wolf=y.is_wolf;
+    let mates = (y.teammates||[]).map(t=>`${t.pid}号${esc(t.name)}`).join("、")||"无";
+    $("youCard").className = "card";
+    $("youCard").innerHTML =
+      `<div class="roleCard ${wolf?'wolf':'good'}">
+         <b>你是 ${y.pid}号 ${esc(y.name)}</b> · 身份：<b>${y.role}</b>
+         （${wolf?'狼人阵营':'好人阵营'}）${y.alive?'':' · <span style="color:#e0564f">已出局</span>'}
+         <div class="muted" style="margin-top:4px">${roleDesc(y.role)}</div>
+         ${wolf?`<div class="muted" style="margin-top:4px">🐺 狼队友：${mates}</div>`:''}
+       </div>`;
+  }
+  // 玩家列表
+  $("players").innerHTML = (s.players||[]).map(p=>{
+    let cls="pill"; if(!p.alive)cls+=" dead"; if(p.is_you)cls+=" you"; if(p.pid===s.speaking)cls+=" act";
+    let badge = (s.sheriff && p.pid===s.sheriff) ? " 🚩" : "";
+    let r = p.role? ` <span class="muted">(${p.role})</span>`:"";
+    let h = p.is_human? "👤":"🤖";
+    return `<span class="${cls}">${h}${p.pid}号 ${esc(p.name)}${badge}${r}</span>`;
+  }).join("");
+  // 日志
+  const log=$("log");
+  const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+  log.innerHTML = (s.public_log||[]).map(l=>`<div class="le">${esc(l)}</div>`).join("");
+  if(atBottom) log.scrollTop = log.scrollHeight;
+  // 额外：机密（狼队）+ 私密提示
+  let extra="";
+  (s.private_log||[]).forEach(t=> extra+=`<div class="priv">${esc(t)}</div>`);
+  (s.secret_log||[]).forEach(t=> extra+=`<div class="sec">${esc(t)}</div>`);
+  $("extraBox").innerHTML = extra ? `<div class="card"><div class="muted" style="margin-bottom:6px">🔒 只有你看得到</div>${extra}</div>` : "";
+  // 狼队密谋室
+  const wcb = $("wolfChatBox");
+  if(s.you && s.you.is_wolf && s.wolf_discussion_open){
+    wcb.style.display = "";
+    const mc = $("wolfChatMsgs");
+    const atBot = mc.scrollHeight - mc.scrollTop - mc.clientHeight < 40;
+    mc.innerHTML = (s.wolf_chat||[]).map(m=>
+      `<div class="le"><b style="color:${m.ai?'#ff9a94':'#7fd0ff'}">${m.ai?'🤖':'👤'}${esc(m.name)}：</b>${esc(m.text)}</div>`).join("");
+    if(atBot) mc.scrollTop = mc.scrollHeight;
+  } else {
+    wcb.style.display = "none";
+  }
+  // 结束横幅
+  if(s.state==="ended"){
+    const w=s.winner;
+    $("bannerBox").innerHTML = `<div class="banner ${w==='狼人'?'wolf':'good'}">${w==='狼人'?'🐺 狼人阵营胜利':'🏆 好人阵营胜利'}</div>
+      <div class="row" style="justify-content:center;margin-bottom:4px">
+        <button class="good" onclick="doReset()">🔄 再来一局（返回房间重新拉人）</button>
+      </div>`;
+  } else {
+    $("bannerBox").innerHTML="";
+  }
+  // 本局身份构成（游戏中/结束时始终展示，不暴露谁是什么身份）
+  if(s.role_composition){
+    $("roleCompCard").style.display = "";
+    $("roleComp").innerHTML = roleCompHtml(s.role_composition);
+  } else {
+    $("roleCompCard").style.display = "none";
+  }
+  // 待办行动
+  renderAction(s.pending);
+}
+
+function renderAction(p){
+  const box=$("actionBox");
+  if(!p){ if(box.innerHTML.indexOf("已提交")<0) box.innerHTML=""; return; }
+  let html = `<div class="action"><h3>${esc(p.prompt)}</h3>`;
+  if(p.discussion){ html += `<div class="sec">🐺 队友讨论：\n${esc(p.discussion)}</div>`; }
+
+  if(p.input==="text"){
+    const ph = (p.kind==="lastwill") ? "留下你的遗言（可留空）" : "输入你的发言（可留空跳过）";
+    html += `<input id="speechInput" type="text" placeholder="${ph}" style="width:100%;margin-top:10px">
+             <div class="opts"><button onclick="submitSpeech()">${p.kind==="lastwill"?"留下遗言":"发送发言"}</button></div>`;
+  } else if(p.input==="sheriff_run"){
+    sheriffRunState = true;
+    html += `<div class="row" style="margin-top:8px">
+        <button id="runY" class="sel" onclick="sheriffRun(true)">🙋 上警</button>
+        <button id="runN" onclick="sheriffRun(false)">🚫 不上警</button></div>`;
+    html += `<input id="campaignInput" type="text" placeholder="竞选发言（一句话，可留空）" style="width:100%;margin-top:10px">`;
+    html += `<div class="opts" style="margin-top:12px"><button class="good" onclick="submitSheriffRun()">确认</button></div>`;
+  } else if(p.input==="witch"){
+    html += `<div class="hint">今晚被袭击：${p.killed_idx?('<b>'+p.killed_idx+'号 '+esc(p.killed_name)+'</b>'):'无人（可能被守卫挡刀）'}</div>`;
+    if(p.has_antidote && p.killed_idx){
+      html += `<div class="opts"><b class="muted" style="align-self:center">解药：</b>
+        <button id="wSaveY" onclick="witchSave(true)">救他</button>
+        <button id="wSaveN" class="sel" onclick="witchSave(false)">不救</button></div>`;
+    } else {
+      html += `<div class="hint">（无解药或无人被袭，无法使用解药）</div>`;
+    }
+    if(p.has_poison){
+      html += `<div class="opts"><b class="muted" style="align-self:center">毒药：</b>
+        <button id="wp0" class="sel" onclick="witchPoison(0)">不用</button>` +
+        (p.poison_options||[]).map(o=>`<button id="wp${o.value}" onclick="witchPoison(${o.value})">${esc(o.label)}</button>`).join("") +
+        `</div>`;
+    }
+    html += `<div class="opts" style="margin-top:12px"><button class="good" onclick="submitWitch()">确认用药</button></div>`;
+  } else { // choice
+    html += `<div class="opts" id="optWrap">`;
+    (p.options||[]).forEach(o=>{
+      html += `<button data-v="${o.value}" onclick="pick(${o.value})">${esc(o.label)}</button>`;
+    });
+    if(p.allow_abstain){
+      html += `<button data-v="0" onclick="pick(0)">🙅 弃票</button>`;
+    }
+    html += `</div><div class="opts" style="margin-top:12px"><button class="good" id="confirmBtn" onclick="submitChoice()" disabled>确认</button></div>`;
+  }
+  html += `</div>`;
+  box.innerHTML = html;
+  // 恢复发言输入的默认聚焦
+  if(p.input==="text"){ const el=$("speechInput"); if(el) el.focus(); }
+}
+
+function pick(v){
+  selVal = v;
+  document.querySelectorAll("#optWrap button").forEach(b=>{
+    b.classList.toggle("sel", String(b.dataset.v)===String(v));
+  });
+  const c=$("confirmBtn"); if(c) c.disabled=false;
+}
+function submitChoice(){ if(selVal===null) return; sendAction(selVal); }
+function submitSpeech(){ sendAction($("speechInput").value||""); }
+let sheriffRunState = true;
+function sheriffRun(v){
+  sheriffRunState = v;
+  const y=$("runY"), n=$("runN");
+  if(y) y.classList.toggle("sel", v);
+  if(n) n.classList.toggle("sel", !v);
+}
+function submitSheriffRun(){
+  sendAction({run: sheriffRunState, speech: ($("campaignInput").value||"")});
+}
+function witchSave(v){ witchState.save=v;
+  const y=$("wSaveY"),n=$("wSaveN"); if(y)y.classList.toggle("sel",v); if(n)n.classList.toggle("sel",!v); }
+function witchPoison(v){ witchState.poison=v;
+  document.querySelectorAll("[id^=wp]").forEach(b=>b.classList.toggle("sel", b.id==="wp"+v)); }
+function submitWitch(){ sendAction({save:witchState.save, poison:witchState.poison}); }
+async function sendWolfChat(){
+  const v = $("wolfChatInput").value.trim();
+  if(!v) return;
+  $("wolfChatInput").value = "";
+  await api("/api/chat", {token:TOKEN, text:v});
+}
+async function endWolfChat(){
+  await api("/api/chat", {token:TOKEN, text:"", done:true});
+}
+
+async function doExit(){
+  if(!confirm("确定退出游戏吗？你的剩余行动将由 AI 接管，游戏继续。")) return;
+  if(TOKEN){
+    try{ await api("/api/exit", {token:TOKEN}); }catch(e){}
+  }
+  localStorage.removeItem("wk_token");
+  TOKEN = "";
+  lastV = -1;
+  // 立即回到「进入房间」界面
+  render({state:"lobby", lobby:{players:[], you_name:"", is_host:false,
+          total:curTotal, n_humans:0, n_ai:curTotal}});
+}
+
+async function doReset(){
+  if(!TOKEN) return;
+  try{ await api("/api/reset", {token:TOKEN}); }catch(e){}
+  localStorage.removeItem("wk_token");
+  TOKEN = "";
+  lastV = -1;
+  // 立即回到「进入房间」界面，房主可重新拉人并开始
+  render({state:"lobby", lobby:{players:[], you_name:"", is_host:false,
+          total:curTotal, n_humans:0, n_ai:curTotal}});
+}
+
+function esc(s){ return String(s==null?"":s)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+async function poll(){
+  try{
+    const s = await api("/api/state?token="+encodeURIComponent(TOKEN||""));
+    // 服务端不认识这个 token（多半是上一局残留：强制关服重开后出现）。
+    // 清掉浏览器里旧的 token，回到「进入房间」界面，让玩家重新加入。
+    if(TOKEN && s.token_valid === false){
+      localStorage.removeItem("wk_token");
+      TOKEN = "";
+      lastV = -1;   // 强制重绘，确保显示加入界面
+    }
+    if(s.v !== lastV){ lastV = s.v; render(s); }
+  }catch(e){ /* 网络抖动忽略 */ }
+  setTimeout(poll, 1000);
+}
+
+// 自动进入：若已有 token 则直接轮询
+poll();
+</script>
+</body>
+</html>
